@@ -1,0 +1,32 @@
+services:
+  app:
+    image: track-picture-service-dev:latest
+    build:
+      context: .
+      target: development
+      args:
+        LOCAL_UID: ${LOCAL_UID:-1000}
+        LOCAL_GID: ${LOCAL_GID:-1000}
+    user: ${LOCAL_UID:-1000}:${LOCAL_GID:-1000}
+    environment:
+      HOME: /home/developer
+      MAVEN_CONFIG: /home/developer/.m2
+      MAVEN_USER_HOME: /home/developer/.m2
+      MAVEN_OPTS: -Duser.home=/home/developer -Dmaven.repo.local=/home/developer/.m2/repository
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+    volumes:
+      - .:/workspace
+      - maven-cache:/home/developer/.m2
+    develop:
+      watch:
+        - path: ./src
+          action: sync+exec
+          target: /workspace/src
+          exec:
+            command: ./mvnw -q compile
+        - path: ./pom.xml
+          action: sync+restart
+          target: /workspace/pom.xml
+
+volumes:
+  maven-cache:

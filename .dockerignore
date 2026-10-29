@@ -1,0 +1,17 @@
+.git/
+.gitignore
+.gitattributes
+AGENTS.md
+.idea/
+.vscode/
+*.iws
+*.iml
+*.ipr
+target/
+build/
+HELP.md
+README.md
+compose*.yaml
+Makefile
+.env
+.env.local
