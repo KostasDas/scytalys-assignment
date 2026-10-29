@@ -9,11 +9,11 @@ services:
         LOCAL_GID: ${LOCAL_GID:-1000}
     user: ${LOCAL_UID:-1000}:${LOCAL_GID:-1000}
     environment:
-      HOME: /home/developer
-      MAVEN_CONFIG: /home/developer/.m2
-      MAVEN_USER_HOME: /home/developer/.m2
-      MAVEN_OPTS: -Duser.home=/home/developer -Dmaven.repo.local=/home/developer/.m2/repository
-      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+      HOME: ${DEV_HOME:?Set DEV_HOME in .env}
+      MAVEN_CONFIG: ${MAVEN_CONFIG:?Set MAVEN_CONFIG in .env}
+      MAVEN_USER_HOME: ${MAVEN_USER_HOME:?Set MAVEN_USER_HOME in .env}
+      MAVEN_OPTS: ${MAVEN_OPTS:?Set MAVEN_OPTS in .env}
+      SPRING_DEVTOOLS_RESTART_ENABLED: ${SPRING_DEVTOOLS_RESTART_ENABLED:?Set SPRING_DEVTOOLS_RESTART_ENABLED in .env}
     volumes:
       - .:/workspace
       - maven-cache:/home/developer/.m2

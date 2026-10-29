@@ -1,7 +1,8 @@
 HELP.md
 /AGENTS.md
 .env
-.env.local
+.env.*
+!.env.example
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/

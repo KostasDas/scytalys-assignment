@@ -7,12 +7,12 @@ services:
       context: .
       target: production
     environment:
-      DB_URL: jdbc:postgresql://postgres:5432/track_picture
-      DB_USERNAME: track_picture
-      DB_PASSWORD: track_picture
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      DB_URL: ${DB_URL:?Set DB_URL in .env}
+      DB_USERNAME: ${POSTGRES_USER:?Set POSTGRES_USER in .env}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:?Set KAFKA_BOOTSTRAP_SERVERS in .env}
     ports:
-      - "8080:8080"
+      - "${APP_PORT:?Set APP_PORT in .env}:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -22,13 +22,13 @@ services:
   postgres:
     image: postgres:17-alpine
     environment:
-      POSTGRES_DB: track_picture
-      POSTGRES_USER: track_picture
-      POSTGRES_PASSWORD: track_picture
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in .env}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U track_picture -d track_picture"]
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -36,18 +36,18 @@ services:
   kafka:
     image: apache/kafka:3.9.1
     environment:
-      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
-      KAFKA_NODE_ID: 1
-      KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      CLUSTER_ID: ${KAFKA_CLUSTER_ID:?Set KAFKA_CLUSTER_ID in .env}
+      KAFKA_NODE_ID: ${KAFKA_NODE_ID:?Set KAFKA_NODE_ID in .env}
+      KAFKA_PROCESS_ROLES: ${KAFKA_PROCESS_ROLES:?Set KAFKA_PROCESS_ROLES in .env}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: ${KAFKA_LISTENER_SECURITY_PROTOCOL_MAP:?Set KAFKA_LISTENER_SECURITY_PROTOCOL_MAP in .env}
+      KAFKA_LISTENERS: ${KAFKA_LISTENERS:?Set KAFKA_LISTENERS in .env}
+      KAFKA_ADVERTISED_LISTENERS: ${KAFKA_ADVERTISED_LISTENERS:?Set KAFKA_ADVERTISED_LISTENERS in .env}
+      KAFKA_CONTROLLER_LISTENER_NAMES: ${KAFKA_CONTROLLER_LISTENER_NAMES:?Set KAFKA_CONTROLLER_LISTENER_NAMES in .env}
+      KAFKA_CONTROLLER_QUORUM_VOTERS: ${KAFKA_CONTROLLER_QUORUM_VOTERS:?Set KAFKA_CONTROLLER_QUORUM_VOTERS in .env}
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: ${KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR:?Set KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR in .env}
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: ${KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR:?Set KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR in .env}
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: ${KAFKA_TRANSACTION_STATE_LOG_MIN_ISR:?Set KAFKA_TRANSACTION_STATE_LOG_MIN_ISR in .env}
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: ${KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS:?Set KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS in .env}
     volumes:
       - kafka-data:/var/lib/kafka/data
     healthcheck:
@@ -63,9 +63,9 @@ services:
       kafka:
         condition: service_healthy
     command: >
-      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092
-      --create --if-not-exists --topic track-updates
-      --partitions 1 --replication-factor 1
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server ${KAFKA_BOOTSTRAP_SERVERS}
+      --create --if-not-exists --topic ${TRACK_UPDATES_TOPIC}
+      --partitions ${TRACK_UPDATES_PARTITIONS} --replication-factor 1
 
 volumes:
   kafka-data:
