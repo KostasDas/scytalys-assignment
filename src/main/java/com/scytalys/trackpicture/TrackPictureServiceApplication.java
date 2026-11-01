@@ -6,8 +6,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class TrackPictureServiceApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(TrackPictureServiceApplication.class, args);
+	static void main(String[] args) {
+		SpringApplication.run(
+				TrackPictureServiceApplication.class, args);
 	}
 
 }

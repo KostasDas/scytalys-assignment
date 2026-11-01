@@ -9,6 +9,8 @@
 - **Separate development and production-style runtime configurations:** we gain containerized hot reload without rebuilding images, while keeping development tools and source mounts out of the production-style runtime at the cost of maintaining an additional Compose override.
 - **PostgreSQL:** we support large histories and concurrent reads and writes, accepting more memory use and operational overhead than an embedded database such as SQLite.
 - **Direct JDBC:** we keep database access explicit and avoid learning an object-mapping framework, accepting more manual SQL and result-mapping code.
+- **Single-update inserts rather than batching:** each message is an independent unit, so we avoid batch transaction and partial-failure semantics, accepting more database round trips than batch processing.
+- **Database exceptions propagate to the messaging boundary:** we do not catch and swallow persistence failures in `TrackUpdateProcessor`, allowing Spring Kafka error handling to retry rather than acknowledging updates that were not stored.
 - **Local environment configuration:** we keep credentials and host-specific settings out of source control, accepting that `.env` files are not a production secret-management solution.
 - **Persistent PostgreSQL storage:** we preserve database state across container restarts, accepting that a local volume provides neither backups nor disaster recovery.
 
@@ -33,3 +35,8 @@
 - **Explicit topic initialization (`kafka-init`):** a short-lived container creates the topic with `--if-not-exists`, making startup repeatable without failing when the topic already exists.
 - **Persistent Kafka storage (`kafka-data`):** messages and cluster metadata survive container restarts, although a single local volume provides neither replication nor backups.
 - **No host-published Kafka port:** Kafka is reachable only by containers on the Compose network, reducing accidental external access to its unauthenticated listener.
+- **One application consumer group (`spring.kafka.consumer.group-id=track-picture`):** application instances share partition assignments and consumer progress; with one partition, only one instance in this group actively consumes at a time.
+- **String message keys:** string deserialization preserves the producer's track identifier key without introducing a second serialization format.
+- **Typed JSON message values:** Spring Kafka and Jackson convert JSON directly into `TrackUpdateMessage`, avoiding a manual mapper for this single-message topic while moving malformed-JSON handling into the messaging error boundary we will define later.
+- **Fixed value type and restricted type trust:** producer-supplied Java type headers are ignored and only our message package is trusted, reducing the risk of unsafe or unintended polymorphic deserialization.
+- **Direct listener-to-processor dispatch:** `@KafkaListener` invokes the messaging adapter, which calls `TrackUpdateProcessor`; no custom dispatcher is needed while the topic carries only one message type.
