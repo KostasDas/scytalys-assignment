@@ -99,7 +99,7 @@ class TrackPictureEndToEndTests {
 
     @Test
     void routesInvalidAndMalformedUpdatesToDeadLetterTopic() throws Exception {
-        Map<String, Object> consumerProperties = KafkaTestUtils.consumerProps("dlt-test", "false", embeddedKafka);
+        Map<String, Object> consumerProperties = KafkaTestUtils.consumerProps(embeddedKafka, "dlt-test", false);
         consumerProperties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         consumerProperties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class);
 
@@ -139,4 +139,5 @@ class TrackPictureEndToEndTests {
             assertThat(malformedRecord.value()).isEqualTo(malformedJson);
         }
     }
+
 }

@@ -28,3 +28,5 @@ to see how we should scale, vertically or horizontally or both. We'd also use tr
 - **Dead-letter handling (`TRACK_UPDATES_DLT_TOPIC=track-updates-dlt`):** validation and deserialization failures are published without retries; other processing failures are retried three times at the configurable `TRACK_UPDATE_RETRY_INTERVAL_MS` interval before dead-lettering, preserving failed messages for inspection.
 - **Read-time stale detection (`TRACK_STALE_AFTER_MS=300000`):** picture and single-track responses include `ACTIVE` or `STALE`, calculated from the latest observation timestamp without a background job or additional stored state.
 
+
+

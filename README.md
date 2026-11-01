@@ -51,7 +51,7 @@ External source / demo producer
  TrackUpdateKafkaListener
               |
               v
-  TrackUpdateProcessor -- invalid --> rejection log
+  TrackUpdateProcessor -- invalid --> rejection log + dlt
               |
            valid
               |
@@ -64,40 +64,57 @@ PostgreSQL       TrackUpdateCache
       |                 +----------> GET /tracks/{trackId}
       |                           (with database fallback)
       |
-      +----------------> GET /picture
+      +----------------> GET /picture 
       |
       +----------------> GET /tracks/{trackId}/history
 ```
+API is exposed through TrackController.
 
 ## Key design decisions and trade-offs
 
-I elaborate more on [Decisions](DECISIONS.md) but as a design philosophy, based on the assignment I decided that the following criteria are the most important:
-- Correctness
-- Reliability
-- Simplicity
+**Single durable source of truth:** PostgreSQL stores every accepted update, and both picture and history are derived from it. This avoids inconsistencies between separate picture and history stores, at the cost of more database reads and no independent scaling of the two read models.
 
-Simplicity offers us debugging, predictive message handling and is tied to correctness. It is easy to get lost in distributed systems. 
-I decided to design for scalability but not scale if it's not needed. Furthermore, it keeps updates atomic and performant. By having one table where we insert the updates
-and this table is used to recreate picture and history we essentially reduce surface area for errors to the minimum and ensure state cannot be corrupted. If we had multiple tables (let's say one for track updates one for picture)
-we'd need to handle the case where inserting an update succeeds on track updates but fails on picture. A picture or track update read would possibly give us wrong data in that case.
+**Single consumer group and partition:** this keeps per-track ordering and failure handling simple, while limiting parallel consumption.
 
-Junk data offer us nothing. It's more important to have the correct data with smaller volume than wrong data. There's one trade off I'm not too sure about:
-/picture does not use cache to ensure correctness as DB is source of truth, but I have identified it as an endpoint whose performance is sensitive. 
+**Selective caching:** single-track reads use an in-memory cache for speed. `/picture` queries PostgreSQL directly because caching the whole picture would require a reliable way to detect stale entries; this favors correctness over latency.
+
+**Alternative considered:** separate picture and history consumer groups would allow independent processing and scaling, but would introduce more infrastructure and consistency concerns without improving correctness for this assignment.
+
+More configuration details are in [Decisions](DECISIONS.md).
+
 
 - Validation: invalid updates are logged and never reach PostgreSQL or the cache.
 - Duplicates and replay: (track_id, observed_at) is the database key, so reprocessing the same update cannot duplicate history.
-- Ordering: older updates remain in history but cannot replace a newer cached state; /picture selects the latest database row.
+- Ordering: older updates remain in history but cannot replace a newer cached state; /picture selects the latest database row based on timestamp.
 - Single partition: guarantees ordered processing for the assignment, sacrificing parallel consumption.
+- 
+## Key note: alternative architecture
+
+A second valid approach would use separate picture and history consumer groups, with every message delivered to both. 
+The picture side would keep the latest state in memory, while the history side would store every unique update. 
+It was not chosen because one consumer group covers the assignment with less infrastructure and fewer consistency concerns, while leaving room to introduce the second group later if independent processing or scaling becomes necessary.
+
 
 
 ## Stretch goals implemented:
 - Invalid updates and malformed JSON are routed to `track-updates-dlt`; validation failures are also logged.
 - Picture and single-track responses include `ACTIVE` or `STALE`, based on the configurable `TRACK_STALE_AFTER_MS` threshold (five minutes by default).
+- "Rebuild the picture from the topic on restart instead of starting empty" this is implemented by default because our picture does not start empty on restart, only the cache does.
+- Unit tests included test for validation, cache behaviour and ordering. Application does not test for idempotency in unit tests because I decided to leave database out of them. The demo-producer script demonstrates it though.
 
 ## What I would improve with more time
 
+Technical improvements
+- Last stretch goal implemented "Metrics or a health endpoint showing consumer lag"
+- DLT message handler, redelivery, statistics and diagnostics. Same treatment for logs.
 - Performance improvements:
-- - Multiple kafka partitions and more consumers to handle more updates
+- - Multiple kafka partitions and more consumers to handle more updates. This would require a stress test, see how far we can take the current implementation and decide how to scale.
 - - Introduce persistent cache for timing sensitive operations (Get latest location of specific airborne object very fast)
+- - Image sliming and container performance improvements: Check if we can make the docker containers smaller also inspect end container for cpu and memory usage during stress test.
+- Encrypted communication so that messages cannot be viewed.
+- Visualisation of the tracks
+
+Business improvements
 - Identity handling
 - - Handle objects differently based on their identity. For example based on what we are doing we would drop friendly and neutral and keep unknown and hostile or the opposite. 
+- - Enhance the API to allow fetching based on Identity. For example picture of all hostile objects
