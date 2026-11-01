@@ -108,9 +108,9 @@ Technical improvements
 - Last stretch goal implemented "Metrics or a health endpoint showing consumer lag"
 - DLT message handler, redelivery, statistics and diagnostics. Same treatment for logs.
 - Performance improvements:
-- - Multiple kafka partitions and more consumers to handle more updates. This would require a stress test, see how far we can take the current implementation and decide how to scale.
-- - Introduce persistent cache for timing sensitive operations (Get latest location of specific airborne object very fast)
-- - Image sliming and container performance improvements: Check if we can make the docker containers smaller also inspect end container for cpu and memory usage during stress test.
+  - Multiple kafka partitions and more consumers to handle more updates. This would require a stress test, see how far we can take the current implementation and decide how to scale.
+  - Introduce persistent cache for timing sensitive operations (Get latest location of specific airborne object very fast)
+  - Image sliming and container performance improvements: Check if we can make the docker containers smaller also inspect end container for cpu and memory usage during stress test.
 - Encrypted communication so that messages cannot be viewed.
 - Visualisation of the tracks
 
