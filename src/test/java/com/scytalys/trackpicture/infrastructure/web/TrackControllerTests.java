@@ -69,6 +69,25 @@ class TrackControllerTests {
         assertThat(result).containsExactly(update);
     }
 
+    @Test
+    void returnsPictureWithLatestUpdateForEachTrack() {
+        TrackUpdate update = update();
+        when(cachedRepository.findAllLatest()).thenReturn(List.of(update));
+
+        List<TrackUpdate> result = controller.getPicture();
+
+        assertThat(result).containsExactly(update);
+    }
+
+    @Test
+    void returnsEmptyPictureWhenNoTracksExist() {
+        when(cachedRepository.findAllLatest()).thenReturn(List.of());
+
+        List<TrackUpdate> result = controller.getPicture();
+
+        assertThat(result).isEmpty();
+    }
+
     private static TrackUpdate update() {
         return new TrackUpdate(
                 "aircraft-7",
