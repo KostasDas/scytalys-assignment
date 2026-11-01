@@ -23,6 +23,11 @@ public class TrackController {
         this.cachedRepository = cachedRepository;
     }
 
+    @GetMapping("/picture")
+    public List<TrackUpdate> getPicture() {
+        return cachedRepository.findAllLatest();
+    }
+
     @GetMapping("/tracks/{trackId}")
     public ResponseEntity<TrackUpdate> getTrack(@PathVariable("trackId") String trackId) {
         return cachedRepository.findLatestByTrackId(trackId)

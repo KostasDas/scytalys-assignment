@@ -4,6 +4,7 @@ import com.scytalys.trackpicture.application.TrackUpdate;
 import com.scytalys.trackpicture.application.TrackUpdateCache;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -26,5 +27,9 @@ public class CachedTrackRepository {
         Optional<TrackUpdate> latest = repository.findLatestByTrackId(trackId);
         latest.ifPresent(cache::update);
         return latest;
+    }
+
+    public List<TrackUpdate> findAllLatest() {
+        return repository.findAllLatest();
     }
 }

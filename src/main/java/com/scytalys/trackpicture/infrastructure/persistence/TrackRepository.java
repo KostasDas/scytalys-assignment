@@ -56,6 +56,17 @@ public class TrackRepository {
                 .optional();
     }
 
+    public List<TrackUpdate> findAllLatest() {
+        return jdbcClient.sql("""
+                        SELECT DISTINCT ON (track_id)
+                            track_id, observed_at, latitude, longitude, altitude, heading, identity
+                        FROM track_updates
+                        ORDER BY track_id, observed_at DESC
+                        """)
+                .query(TRACK_UPDATE_ROW_MAPPER)
+                .list();
+    }
+
     public List<TrackUpdate> findHistoryByTrackId(String trackId, SortDirection sortDirection) {
         String sql = switch (sortDirection) {
             case ASC -> HISTORY_SQL + " ORDER BY observed_at ASC";

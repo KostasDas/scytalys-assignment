@@ -11,6 +11,7 @@
 - **Direct JDBC:** we keep database access explicit and avoid learning an object-mapping framework, accepting more manual SQL and result-mapping code.
 - **Single-update inserts rather than batching:** each message is an independent unit, so we avoid batch transaction and partial-failure semantics, accepting more database round trips than batch processing.
 - **Database exceptions propagate to the messaging boundary:** we do not catch and swallow persistence failures in `TrackUpdateProcessor`, allowing Spring Kafka error handling to retry rather than acknowledging updates that were not stored.
+- **Database-backed whole picture:** `GET /picture` queries the latest PostgreSQL row per track on every request, favoring correctness over the speed of a potentially incomplete or stale cache; only single-track reads use the in-memory cache.
 - **Local environment configuration:** we keep credentials and host-specific settings out of source control, accepting that `.env` files are not a production secret-management solution.
 - **Persistent PostgreSQL storage:** we preserve database state across container restarts, accepting that a local volume provides neither backups nor disaster recovery.
 
