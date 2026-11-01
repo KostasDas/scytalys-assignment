@@ -25,4 +25,5 @@ to see how we should scale, vertically or horizontally or both. We'd also use tr
 - **Future partitioned scaling:** we could add partitions to process different tracks in parallel, using `trackId` as the message key so every update for a given track is assigned to the same partition and retains per-track arrival ordering.
 - **Persistent Kafka storage (`kafka-data`):** messages and cluster metadata survive container restarts, although a single local volume provides neither replication nor backups.
 - **One application consumer group (`spring.kafka.consumer.group-id=track-picture`):** application instances share partition assignments and consumer progress; with one partition, only one instance in this group actively consumes at a time.
+- **Dead-letter handling (`TRACK_UPDATES_DLT_TOPIC=track-updates-dlt`):** validation and deserialization failures are published without retries; other processing failures are retried three times at one-second intervals before dead-lettering, preserving failed messages for inspection.
 

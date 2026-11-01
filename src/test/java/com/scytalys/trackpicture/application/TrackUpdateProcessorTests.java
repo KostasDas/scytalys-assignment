@@ -109,7 +109,9 @@ class TrackUpdateProcessorTests {
     @ParameterizedTest
     @MethodSource("invalidUpdates")
     void rejectsInvalidUpdateWithoutWritingAnywhere(TrackUpdateMessage message) {
-        processor.process(message);
+        assertThatThrownBy(() -> processor.process(message))
+                .isInstanceOf(InvalidTrackUpdateException.class)
+                .hasMessageContaining("Rejected update");
 
         verifyNoInteractions(repository, cache);
     }

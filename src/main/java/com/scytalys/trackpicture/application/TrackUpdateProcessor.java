@@ -29,12 +29,12 @@ public class TrackUpdateProcessor {
         Set<ConstraintViolation<TrackUpdateMessage>> violations = validator.validate(message);
 
         if (!violations.isEmpty()) {
-            violations.forEach(violation -> logger.error(
-                    "Rejected update: {} {}",
-                    violation.getPropertyPath(),
-                    violation.getMessage()
-            ));
-            return;
+            String reason = String.join("; ", violations.stream()
+                    .map(violation -> violation.getPropertyPath() + " " + violation.getMessage())
+                    .sorted()
+                    .toList());
+            logger.error("Rejected update: {}", reason);
+            throw new InvalidTrackUpdateException("Rejected update: " + reason);
         }
         logger.info("Processing update {}", message.trackId());
         int inserted = repository.insert(message);
