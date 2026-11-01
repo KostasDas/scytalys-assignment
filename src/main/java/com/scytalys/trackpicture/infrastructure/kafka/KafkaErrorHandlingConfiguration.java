@@ -67,7 +67,8 @@ public class KafkaErrorHandlingConfiguration {
     @Bean
     DefaultErrorHandler trackUpdateErrorHandler(
             KafkaOperations<String, Object> deadLetterKafkaTemplate,
-            @Value("${TRACK_UPDATES_DLT_TOPIC:track-updates-dlt}") String deadLetterTopic
+            @Value("${TRACK_UPDATES_DLT_TOPIC:track-updates-dlt}") String deadLetterTopic,
+            @Value("${TRACK_UPDATE_RETRY_INTERVAL_MS:1000}") long retryIntervalMs
     ) {
         DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(
                 deadLetterKafkaTemplate,
@@ -75,7 +76,7 @@ public class KafkaErrorHandlingConfiguration {
         );
         DefaultErrorHandler errorHandler = new DefaultErrorHandler(
                 recoverer,
-                new FixedBackOff(1000L, 3L)
+                new FixedBackOff(retryIntervalMs, 3L)
         );
         errorHandler.addNotRetryableExceptions(InvalidTrackUpdateException.class);
         return errorHandler;

@@ -91,8 +91,8 @@ Junk data offer us nothing. It's more important to have the correct data with sm
 
 
 ## Stretch goals implemented:
-
 - Invalid updates and malformed JSON are routed to `track-updates-dlt`; validation failures are also logged.
+- Picture and single-track responses include `ACTIVE` or `STALE`, based on the configurable `TRACK_STALE_AFTER_MS` threshold (five minutes by default).
 
 ## What I would improve with more time
 

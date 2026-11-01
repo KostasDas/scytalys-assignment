@@ -1,5 +1,7 @@
 package com.scytalys.trackpicture.infrastructure.web;
 
+import com.scytalys.trackpicture.application.TrackStalenessEvaluator;
+import com.scytalys.trackpicture.application.TrackStatus;
 import com.scytalys.trackpicture.application.TrackUpdate;
 import com.scytalys.trackpicture.infrastructure.persistence.CachedTrackRepository;
 import com.scytalys.trackpicture.infrastructure.persistence.SortDirection;
@@ -29,22 +31,26 @@ class TrackControllerTests {
     @Mock
     private CachedTrackRepository cachedRepository;
 
+    @Mock
+    private TrackStalenessEvaluator stalenessEvaluator;
+
     private TrackController controller;
 
     @BeforeEach
     void setUp() {
-        controller = new TrackController(repository, cachedRepository);
+        controller = new TrackController(repository, cachedRepository, stalenessEvaluator);
     }
 
     @Test
     void returnsLatestTrackWhenPresent() {
         TrackUpdate update = update();
         when(cachedRepository.findLatestByTrackId(update.trackId())).thenReturn(Optional.of(update));
+        when(stalenessEvaluator.statusOf(update)).thenReturn(TrackStatus.ACTIVE);
 
-        ResponseEntity<TrackUpdate> response = controller.getTrack(update.trackId());
+        ResponseEntity<TrackUpdateResponse> response = controller.getTrack(update.trackId());
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isEqualTo(update);
+        assertThat(response.getBody()).isEqualTo(TrackUpdateResponse.from(update, TrackStatus.ACTIVE));
     }
 
     @Test
@@ -52,7 +58,7 @@ class TrackControllerTests {
         String trackId = "missing";
         when(cachedRepository.findLatestByTrackId(trackId)).thenReturn(Optional.empty());
 
-        ResponseEntity<TrackUpdate> response = controller.getTrack(trackId);
+        ResponseEntity<TrackUpdateResponse> response = controller.getTrack(trackId);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).isNull();
@@ -73,17 +79,18 @@ class TrackControllerTests {
     void returnsPictureWithLatestUpdateForEachTrack() {
         TrackUpdate update = update();
         when(cachedRepository.findAllLatest()).thenReturn(List.of(update));
+        when(stalenessEvaluator.statusOf(update)).thenReturn(TrackStatus.STALE);
 
-        List<TrackUpdate> result = controller.getPicture();
+        List<TrackUpdateResponse> result = controller.getPicture();
 
-        assertThat(result).containsExactly(update);
+        assertThat(result).containsExactly(TrackUpdateResponse.from(update, TrackStatus.STALE));
     }
 
     @Test
     void returnsEmptyPictureWhenNoTracksExist() {
         when(cachedRepository.findAllLatest()).thenReturn(List.of());
 
-        List<TrackUpdate> result = controller.getPicture();
+        List<TrackUpdateResponse> result = controller.getPicture();
 
         assertThat(result).isEmpty();
     }
