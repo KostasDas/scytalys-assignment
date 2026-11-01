@@ -17,10 +17,12 @@ public class TrackUpdateProcessor {
 
     private final Validator validator;
     private final TrackRepository repository;
+    private final TrackUpdateCache cache;
 
-    public TrackUpdateProcessor(Validator validator, TrackRepository repository) {
+    public TrackUpdateProcessor(Validator validator, TrackRepository repository, TrackUpdateCache cache) {
         this.validator = validator;
         this.repository = repository;
+        this.cache = cache;
     }
 
     public void process(TrackUpdateMessage message) {
@@ -28,19 +30,33 @@ public class TrackUpdateProcessor {
 
         if (!violations.isEmpty()) {
             violations.forEach(violation -> logger.error(
-                    "Rejected message: {} {}",
+                    "Rejected update: {} {}",
                     violation.getPropertyPath(),
                     violation.getMessage()
             ));
             return;
         }
-        logger.info("Processing message {}", message.trackId());
-        int id = repository.insert(message);
-        if (id == 0 ) {
-            logger.info("Message {} was ignored, already exists", message.trackId());
+        logger.info("Processing update {}", message.trackId());
+        int inserted = repository.insert(message);
+        cache.update(toTrackUpdate(message));
+
+        if (inserted == 0 ) {
+            logger.info("Update {} was ignored, already exists", message.trackId());
             return;
         }
-        logger.info("Processed message {}, acquired id {}", message.trackId(), id);
+        logger.info("Inserted update {}", message.trackId());
 
+    }
+
+    private static TrackUpdate toTrackUpdate(TrackUpdateMessage message) {
+        return new TrackUpdate(
+                message.trackId(),
+                message.timestamp(),
+                message.latitude(),
+                message.longitude(),
+                message.altitude(),
+                message.heading(),
+                message.identity()
+        );
     }
 }
