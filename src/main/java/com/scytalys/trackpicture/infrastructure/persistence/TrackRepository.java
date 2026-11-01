@@ -43,6 +43,11 @@ public class TrackRepository {
         this.jdbcClient = jdbcClient;
     }
 
+    /**
+     * Inserts an update unless its track ID and timestamp already exist.
+     *
+     * @return {@code 1} when a row is inserted, or {@code 0} for a duplicate
+     */
     public int insert(TrackUpdateMessage update) {
         return jdbcClient.sql(INSERT_SQL)
                 .params(toSqlParameters(update))

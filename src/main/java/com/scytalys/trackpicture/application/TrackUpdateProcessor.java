@@ -25,6 +25,11 @@ public class TrackUpdateProcessor {
         this.cache = cache;
     }
 
+    /**
+     * Validates and stores an update before applying it to the current picture.
+     *
+     * @throws InvalidTrackUpdateException when validation fails; no history or cache write is attempted
+     */
     public void process(TrackUpdateMessage message) {
         Set<ConstraintViolation<TrackUpdateMessage>> violations = validator.validate(message);
 

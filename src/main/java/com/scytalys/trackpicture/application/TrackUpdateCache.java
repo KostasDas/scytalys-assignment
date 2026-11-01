@@ -13,6 +13,9 @@ public class TrackUpdateCache {
         return latestUpdates.get(key);
     }
 
+    /**
+     * Replaces the cached state only when the update has a strictly newer timestamp.
+     */
     public void update(TrackUpdate update) {
         latestUpdates.compute(update.trackId(), (_, current) ->
                 current == null || update.timestamp().isAfter(current.timestamp())

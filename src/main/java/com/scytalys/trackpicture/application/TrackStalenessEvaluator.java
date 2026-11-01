@@ -23,6 +23,9 @@ public class TrackStalenessEvaluator {
         this.clock = clock;
     }
 
+    /**
+     * Marks observations older than the configured threshold as stale; the threshold itself remains active.
+     */
     public TrackStatus statusOf(TrackUpdate update) {
         return update.timestamp().isBefore(clock.instant().minus(staleAfter))
                 ? TrackStatus.STALE

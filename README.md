@@ -87,7 +87,7 @@ More configuration details are in [Decisions](DECISIONS.md).
 - Duplicates and replay: (track_id, observed_at) is the database key, so reprocessing the same update cannot duplicate history.
 - Ordering: older updates remain in history but cannot replace a newer cached state; /picture selects the latest database row based on timestamp.
 - Single partition: guarantees ordered processing for the assignment, sacrificing parallel consumption.
-- 
+
 ## Key note: alternative architecture
 
 A second valid approach would use separate picture and history consumer groups, with every message delivered to both. 
@@ -118,3 +118,15 @@ Business improvements
 - Identity handling
 - - Handle objects differently based on their identity. For example based on what we are doing we would drop friendly and neutral and keep unknown and hostile or the opposite. 
 - - Enhance the API to allow fetching based on Identity. For example picture of all hostile objects
+
+
+## AI Disclosure
+I used AI for:
+- Scaffolding the initial setup before inspecting the docker and docker compose files myself.
+- I am familiar with Java but not very familiar with Spring boot, so I asked a lot of questions about the opinionated nature of spring boot.
+- Generating code comments.
+- The DLT configuration, specifically the KafkaErrorHandlingConfiguration and the compose changes for the dlt
+- The demo-producer.sh
+- The end to end tests.
+
+I retain ownership of what was written, Any code that was AI generated I have read and inspected, architectural and design decisions were mine.

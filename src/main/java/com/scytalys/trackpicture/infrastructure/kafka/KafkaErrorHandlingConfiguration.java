@@ -42,6 +42,9 @@ public class KafkaErrorHandlingConfiguration {
         return new KafkaTemplate<>(producerFactory);
     }
 
+    /**
+     * Supports typed validation failures and preserves raw bytes from malformed JSON.
+     */
     @Bean
     ProducerFactory<String, Object> deadLetterProducerFactory(KafkaProperties properties) {
         JacksonJsonSerializer<Object> jsonSerializer = new JacksonJsonSerializer<>();
