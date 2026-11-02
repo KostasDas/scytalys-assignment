@@ -72,7 +72,7 @@ API is exposed through TrackController.
 
 ## Key design decisions and trade-offs
 
-**Single durable source of truth:** PostgreSQL stores every accepted update, and both picture and history are derived from it. This avoids inconsistencies between separate picture and history stores, at the cost of more database reads and no independent scaling of the two read models.
+**Database as source of truth:** PostgreSQL stores every accepted update, and both picture and history are derived from it. This avoids inconsistencies between separate picture and history stores, at the cost of more database reads and no independent scaling of the two read models.
 
 **Single consumer group and partition:** this keeps per-track ordering and failure handling simple, while limiting parallel consumption.
 
@@ -80,11 +80,11 @@ API is exposed through TrackController.
 
 **Alternative considered:** separate picture and history consumer groups would allow independent processing and scaling, but would introduce more infrastructure and consistency concerns without improving correctness for this assignment.
 
-More configuration details are in [Decisions](DECISIONS.md).
+More details are in [Decisions](DECISIONS.md).
 
 
-- Validation: invalid updates are logged and never reach PostgreSQL or the cache.
-- Duplicates and replay: (track_id, observed_at) is the database key, so reprocessing the same update cannot duplicate history.
+- Validation: invalid updates are logged (both DLT and stderr) and never reach PostgreSQL or the cache.
+- Duplicates and replay: (track_id, observed_at) is the database key, so reprocessing the same update cannot duplicate history. Enforcing idempotency.
 - Ordering: older updates remain in history but cannot replace a newer cached state; /picture selects the latest database row based on timestamp.
 - Single partition: guarantees ordered processing for the assignment, sacrificing parallel consumption.
 
